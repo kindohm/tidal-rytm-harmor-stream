@@ -1,0 +1,110 @@
+let limit p = (|* gain 1.2) $ p
+    rytm = s "rytm"
+    harmor = s "harmor" # midichan 0
+    lead = s "harmor" # midichan 1
+    pad11 = midichan 10
+    pad12 = midichan 11
+    perf3 = ccn 37
+    perf4 = ccn 39
+    perf7 = ccn 42 
+    perf8 = ccn 43
+    modx = ccn 1
+    mody = ccn 2
+    modz = ccn 3
+    xfade = ccn 4
+    prism = ccn 5
+    phwidth = ccn 6
+    phoff = ccn 7
+    phspeed = ccn 8 
+    phtype = ccn 9
+    penv = ccn 10
+    scene pat = ccv pat # ccn 92
+    shrand x = (x ~>) $ rand
+    ccvrand shiftAmount = ccv (range 0 127 $ shrand shiftAmount)
+    ccvcoinflip shiftAmount = ccv ((shiftAmount ~>) $ choose [0,0,127])
+    sb = sometimesBy
+    ssb = someCyclesBy
+    g p = (const $ s "~") $ p
+
+
+hush
+
+do
+  let pat = "{0@7 0@5 2@9 0@2 0@2 1@10 0@3 0@3 2@3 1@4 0@7}%16"
+      modpat p = every 3 rev $ p
+  p "drums" 
+    $ limit 
+    $ modpat $ stack [
+      ssb 0.33 (stutWith ((5 ~>) $ choose [4,6,8]) ((6 ~>) $ choose [1/16,1/8,3/16,1/4]) (|* gain 0.9))
+        $ midichan ( unwrap $ fmap ([2,3,1]!!) $ pat)
+      , perf4 # ccvrand 100
+      , fast 3 $ perf3 # ccvcoinflip 101
+      , fast 2 $ perf7 # ccvrand 300
+      , fast 2.1 $ perf8 # ccvcoinflip 301
+      , sb 0.09 (# pad12) 
+        $ (1 ~>) 
+        $ sb 0.25 ((1/16) ~>) 
+        $ struct (ascii "<s t r e a m i n g  i s  f u n>") 
+        $ pad11
+      , slow 2.5 $ scene "<0 1 2>"
+    ]
+    # rytm 
+    # note "c3" 
+    # cps (180/120/2) 
+  p "harmor"
+    $ limit
+    $ modpat $ stack [  
+      note (unwrap $ fmap ([-12, "~", -5]!!) $ pat) 
+      , ccv (unwrap $ fmap ([0,0,127]!!) $ pat) # xfade
+      , slow 2 $ stack [
+          modx # ccvrand 200
+        , mody # ccvrand 201
+        , modz # ccvrand 202
+        , prism # ccvrand 203 
+        , phwidth # ccvrand 204 
+        , phoff # ccvrand 205 
+        , phtype # ccvrand 206 
+        , phspeed # ccvrand 207 
+        , penv # ccv (wchoose [(127,4), (64,1), (0,1)])
+      ]
+    ] # harmor
+  p "lead"
+    $ limit 
+    $ every 3 (slow 2) 
+    $ gain "{1@10 1@5 1@5 1@5 1@7 1@13}%16"
+    # note (scale "ritusen" "{0 -1 2 1 3 -2}%16")
+    # lead
+
+
+d1 $ limit $ struct "1(3,8)" $ s "rytm" # note "c3" # midichan 1
+
+
+hush
+
+
+d1 $ penv # ccv (wchoose [(127,4), (64,1), (0,1)]) # s "harmor"
+
+
+
+
+hush
+
+
+-- RYTM
+-- MIDI
+-- midichan 0 = pad1 
+-- midichan 1 = pad2
+-- midicahn 2 = pad3
+-- ...
+-- midichan 11 = pad12
+
+
+
+
+
+
+
+
+
+
+
